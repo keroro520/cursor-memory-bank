@@ -1,0 +1,595 @@
+---
+description: Rules for generating weekly/monthly reports from Memory Bank data
+globs: report-generation.mdc
+alwaysApply: false
+---
+
+# REPORT GENERATION RULES
+
+> **TL;DR:** This guide defines how to automatically generate comprehensive weekly reports from Memory Bank data, including tasks, lessons, and progress tracking.
+
+## 🎯 Purpose
+
+Generate structured reports that:
+- Summarize completed work for a time period
+- Extract lessons learned and insights
+- Track progress and ongoing work
+- Provide data for planning and improvement
+- Serve as project documentation
+
+## 📋 Report Structure (Weekly Report Template)
+
+```markdown
+# 工作周报 - Week [N], [Year]
+
+**报告周期**: YYYY-MM-DD 至 YYYY-MM-DD
+**生成时间**: YYYY-MM-DD HH:MM
+**项目**: [Project Name from projectbrief.md or "Project"]
+
+---
+
+## 📊 本周概览
+
+- **完成任务**: X 个
+- **总工作量**: Level 1: X个 | Level 2: X个 | Level 3: X个 | Level 4: X个
+- **新增经验**: X 条（涉及 Y 个模块）
+- **应用经验**: Z 次
+
+---
+
+## ✅ 完成任务清单
+
+[For each completed task, ordered by completion date]
+
+### [N]. [Task Name] (Level X)
+**完成日期**: YYYY-MM-DD
+**简要说明**: [One-line summary from archive SUMMARY section]
+
+**关键成果**:
+[Extract from IMPLEMENTATION or KEY CHANGES section, max 3-5 bullet points]
+
+**相关文档**: [`archive-[task-id].md`](../archive/archive-[task-id].md)
+
+---
+
+## 💡 经验与洞察
+
+### 技术经验
+本周在以下模块积累了新经验：
+
+[For each module with new lessons]
+
+#### [Module Name] ([N] lessons)
+- **L[num]: [Lesson Title]**
+  简要：[Brief context from lesson, max 1 sentence]
+  影响：[Impact or value of this lesson]
+
+### 流程改进
+[Extract from reflection documents: "Process Improvements" sections]
+
+---
+
+## 🎯 关键成果
+
+### 功能交付
+[Summarize major features/changes delivered, extracted from task summaries]
+
+### 技术提升
+[Extract from "Lessons Learned - Technical" in reflections]
+
+---
+
+## 🚧 遇到的挑战
+
+[For each task with significant challenges]
+
+### [N]. [Challenge Title]（[已解决/进行中]）
+- **问题**: [Challenge description from reflection]
+- **解决**: [Solution from reflection, if resolved]
+- **经验**: [Link to related lesson if created]
+
+---
+
+## 📈 应用经验统计
+
+本周成功应用了以下历史经验：
+
+| 经验 | 应用次数 | 有效性 |
+|------|---------|--------|
+[For each lesson referenced in tasks]
+| [module].md#L[num] - [Lesson title] | [N]次 | [Success rate or "有效/部分有效/待评估"] |
+
+**收获**: [Summary of how lessons helped or need improvement]
+
+---
+
+## 📝 进行中的工作
+
+[From tasks.md, extract in-progress tasks]
+
+### 本周未完成（计划下周继续）
+1. **[Task Name]** - Level X
+   - 当前状态：[PLAN/CREATIVE/BUILD] 阶段
+   - 预计完成：[If available]
+
+---
+
+## 🎯 下周计划
+
+### 主要任务
+[Suggest based on ongoing work, or leave as template for user to fill]
+
+### 预期成果
+[Leave as template]
+
+---
+
+## 💭 反思与改进
+
+### 做得好的地方
+[Extract "What Went Well" from reflection documents, top 3]
+
+### 需要改进的地方
+[Extract "What Could Have Been Done Differently" from reflections, top 3]
+
+### 下周改进措施
+[Derive from improvements or leave as template]
+
+---
+
+## 📊 统计数据
+
+### 任务分布
+- Level 1 (Bug修复/小改动): X个 (Y%)
+- Level 2 (简单功能): X个 (Y%)
+- Level 3 (中等功能): X个 (Y%)
+- Level 4 (复杂系统): X个 (Y%)
+
+### 经验库状态
+- 本周新增: X条
+- 累计总数: Y条
+- 活跃模块: [Top 3 modules]
+
+---
+
+## 🔗 相关链接
+
+- [归档任务列表](../archive/)
+- [反思文档](../reflection/)
+- [经验知识库](../lessons/)
+- [进度追踪](../progress.md)
+
+---
+
+*本周报由 Memory Bank 系统自动生成于 YYYY-MM-DD HH:MM*
+*数据来源: memory-bank/archive/, memory-bank/reflection/, memory-bank/lessons/*
+```
+
+## 🔍 Data Extraction Rules
+
+### 1. Time Range Calculation
+
+```python
+# ISO 8601 week calculation
+def get_week_date_range(year, week_num):
+    """
+    Calculate start and end dates for a given ISO week.
+    Week starts on Monday, ends on Sunday.
+    """
+    # Jan 4th is always in week 1
+    jan4 = datetime(year, 1, 4)
+    week_start = jan4 - timedelta(days=jan4.weekday())  # Monday of week 1
+    target_monday = week_start + timedelta(weeks=week_num - 1)
+    target_sunday = target_monday + timedelta(days=6)
+
+    return {
+        'start': target_monday.replace(hour=0, minute=0, second=0),
+        'end': target_sunday.replace(hour=23, minute=59, second=59),
+        'year': year,
+        'week': week_num
+    }
+
+# Current week
+def get_current_week():
+    today = datetime.now()
+    return {
+        'year': today.isocalendar()[0],
+        'week': today.isocalendar()[1]
+    }
+```
+
+### 2. Archive File Filtering
+
+```python
+def is_task_in_range(archive_file_path, start_date, end_date):
+    """
+    Determine if an archived task falls within the date range.
+    Priority order for date determination:
+    1. Metadata "Completion Date" field
+    2. Metadata "Date" field
+    3. File modification time (mtime)
+    """
+    content = read_file(archive_file_path)
+
+    # Try to parse metadata
+    metadata = extract_metadata_section(content)
+
+    if metadata:
+        # Check for "Completion Date: YYYY-MM-DD"
+        if 'completion_date' in metadata:
+            task_date = parse_date(metadata['completion_date'])
+            return start_date <= task_date <= end_date
+
+        # Check for "Date: YYYY-MM-DD"
+        if 'date' in metadata:
+            task_date = parse_date(metadata['date'])
+            return start_date <= task_date <= end_date
+
+    # Fallback to file modification time
+    file_mtime = os.path.getmtime(archive_file_path)
+    task_date = datetime.fromtimestamp(file_mtime)
+
+    return start_date <= task_date <= end_date
+```
+
+### 3. Task Data Extraction
+
+```python
+def extract_task_data(archive_content):
+    """
+    Extract key information from an archive document.
+    """
+    data = {
+        'task_id': None,
+        'task_name': None,
+        'level': None,
+        'completion_date': None,
+        'summary': None,
+        'key_changes': [],
+        'lessons_learned': [],
+        'challenges': [],
+        'referenced_lessons': []
+    }
+
+    # Parse metadata section (## METADATA)
+    metadata = extract_section(archive_content, "METADATA")
+    if metadata:
+        data['task_id'] = extract_field(metadata, "Task ID")
+        data['level'] = extract_field(metadata, "Complexity Level")
+        data['completion_date'] = extract_field(metadata, "Completion Date")
+
+    # Extract task name from title (# TASK ARCHIVE: [Name])
+    data['task_name'] = extract_title(archive_content)
+
+    # Extract summary (## SUMMARY)
+    data['summary'] = extract_section(archive_content, "SUMMARY")
+
+    # Extract implementation/key changes (## IMPLEMENTATION or ## KEY CHANGES)
+    implementation = extract_section(archive_content, "IMPLEMENTATION")
+    if implementation:
+        data['key_changes'] = extract_bullet_points(implementation, max=5)
+
+    # Extract lessons (## LESSONS LEARNED)
+    lessons = extract_section(archive_content, "LESSONS LEARNED")
+    if lessons:
+        data['lessons_learned'] = extract_bullet_points(lessons)
+
+    # Extract challenges from corresponding reflection
+    # (Read reflection-[task_id].md if exists)
+
+    return data
+```
+
+### 4. New Lessons Detection
+
+```python
+def find_new_lessons(start_date, end_date):
+    """
+    Find lessons created within the date range.
+    """
+    new_lessons = []
+
+    # Scan all lesson files
+    lesson_files = glob('memory-bank/lessons/**/*.md', recursive=True)
+
+    for file_path in lesson_files:
+        # Skip templates and index
+        if '_templates' in file_path or '_index.md' in file_path:
+            continue
+
+        content = read_file(file_path)
+        lessons = parse_lesson_entries(content)
+
+        for lesson in lessons:
+            # Check Effectiveness metadata for "Created: YYYY-MM-DD"
+            if lesson.get('effectiveness', {}).get('created'):
+                created_date = parse_date(lesson['effectiveness']['created'])
+
+                if start_date <= created_date <= end_date:
+                    new_lessons.append({
+                        'module': extract_module_name(file_path),
+                        'id': lesson['id'],  # e.g., "L001"
+                        'title': lesson['title'],
+                        'created': created_date,
+                        'file': file_path
+                    })
+
+    return new_lessons
+```
+
+### 5. Lesson Usage Tracking
+
+```python
+def analyze_lesson_usage(archived_tasks):
+    """
+    Track which lessons were referenced and their effectiveness.
+    """
+    usage = {}
+
+    for task in archived_tasks:
+        # Look for "Relevant Lessons Referenced" section in task archive
+        lessons_section = extract_section(task['content'], "RELEVANT LESSONS REFERENCED")
+
+        if lessons_section:
+            # Parse lesson references: lessons/module.md#L001
+            references = parse_lesson_references(lessons_section)
+
+            for ref in references:
+                key = f"{ref['module']}.md#{ref['lesson_id']}"
+
+                if key not in usage:
+                    usage[key] = {
+                        'module': ref['module'],
+                        'lesson_id': ref['lesson_id'],
+                        'title': ref.get('title', ''),
+                        'count': 0,
+                        'effectiveness': []
+                    }
+
+                usage[key]['count'] += 1
+
+                # Try to find effectiveness assessment in reflection
+                reflection = find_reflection_for_task(task['task_id'])
+                if reflection:
+                    assessment = extract_lesson_assessment(reflection, ref['lesson_id'])
+                    if assessment:
+                        usage[key]['effectiveness'].append(assessment)
+
+    return usage
+```
+
+## 📝 Report Formatting Rules
+
+### Section Ordering
+1. Title and metadata
+2. Weekly overview (statistics)
+3. Completed tasks list
+4. Lessons and insights
+5. Key achievements
+6. Challenges
+7. Lesson usage statistics
+8. Ongoing work
+9. Next week planning (template)
+10. Reflection and improvements
+11. Statistics and charts
+12. Links
+
+### Formatting Guidelines
+
+**Dates**: Use YYYY-MM-DD format consistently
+
+**Task Names**:
+- Include level in parentheses: `(Level 3)`
+- Use title case
+- Keep concise (max 80 chars)
+
+**Bullet Points**:
+- Use `-` for unordered lists
+- Use `1.` for ordered lists
+- Max 3-5 points per section to maintain conciseness
+
+**Tables**:
+- Use markdown tables for structured data
+- Align columns properly
+- Include headers
+
+**Links**:
+- Use relative paths: `../archive/archive-task-001.md`
+- Format: `[Display Text](path)`
+
+### Statistics Calculation
+
+**Task Distribution**:
+```python
+def calculate_task_distribution(tasks):
+    total = len(tasks)
+    by_level = {1: 0, 2: 0, 3: 0, 4: 0}
+
+    for task in tasks:
+        level = task['level']
+        by_level[level] = by_level.get(level, 0) + 1
+
+    return {
+        'total': total,
+        'by_level': {
+            level: {
+                'count': count,
+                'percentage': round(count / total * 100, 1) if total > 0 else 0
+            }
+            for level, count in by_level.items()
+        }
+    }
+```
+
+**Success Rate**:
+```python
+def calculate_success_rate(effectiveness_list):
+    """
+    Calculate success rate from effectiveness assessments.
+    Values: "Helpful", "Partially Helpful", "Not Helpful"
+    """
+    if not effectiveness_list:
+        return "N/A"
+
+    helpful = effectiveness_list.count("Helpful")
+    partially = effectiveness_list.count("Partially Helpful")
+    total = len(effectiveness_list)
+
+    # Weight: Helpful=1.0, Partially=0.5, Not Helpful=0
+    score = (helpful * 1.0 + partially * 0.5) / total * 100
+
+    return f"{round(score)}%"
+```
+
+## 🗂️ Report Index Management
+
+### Index File Structure
+
+`memory-bank/reports/_index.md`:
+```markdown
+# Work Reports Index
+
+**Last Updated**: YYYY-MM-DD HH:MM
+**Total Reports**: N
+
+---
+
+## Weekly Reports
+
+### 2024
+
+- [Week 05](weekly/2024-W05.md) - 8 tasks, 3 new lessons (Jan 29 - Feb 4)
+- [Week 04](weekly/2024-W04.md) - 6 tasks, 2 new lessons (Jan 22 - 28)
+- [Week 03](weekly/2024-W03.md) - 5 tasks, 1 new lesson (Jan 15 - 21)
+
+### 2023
+[...earlier reports...]
+
+---
+
+## Statistics
+
+- **Total Weeks Tracked**: N
+- **Average Tasks per Week**: X.X
+- **Total Lessons Created**: N
+- **Most Productive Week**: Week NN (X tasks)
+
+---
+
+## Trends
+
+- **Task Completion**: ↗️ Increasing / ↘️ Decreasing / ➡️ Stable
+- **Lesson Creation Rate**: X lessons/week average
+- **Most Active Modules**: [module1], [module2], [module3]
+
+---
+
+*Index auto-updated by /report command*
+```
+
+### Index Update Logic
+
+```python
+def update_report_index(new_report_path, report_data):
+    """
+    Add new report entry to index and update statistics.
+    """
+    index_path = 'memory-bank/reports/_index.md'
+
+    # Read existing index or create new
+    if os.path.exists(index_path):
+        index_content = read_file(index_path)
+        entries = parse_report_entries(index_content)
+    else:
+        entries = []
+
+    # Add new entry
+    new_entry = {
+        'year': report_data['year'],
+        'week': report_data['week'],
+        'path': new_report_path,
+        'tasks_count': report_data['total_tasks'],
+        'lessons_count': report_data['new_lessons_count'],
+        'date_range': f"{report_data['start_date']} - {report_data['end_date']}"
+    }
+    entries.insert(0, new_entry)  # Most recent first
+
+    # Recalculate statistics
+    stats = calculate_index_statistics(entries)
+
+    # Render updated index
+    updated_content = render_index_template(entries, stats)
+
+    # Write back
+    write_file(index_path, updated_content)
+```
+
+## ⚠️ Edge Cases and Error Handling
+
+### No Completed Tasks
+
+If no archived tasks found in date range:
+```markdown
+# 工作周报 - Week [N], [Year]
+
+**报告周期**: YYYY-MM-DD 至 YYYY-MM-DD
+
+---
+
+## ⚠️ 无已完成任务
+
+本周期内没有找到已归档的任务。
+
+**可能原因**:
+- 确实没有完成任务
+- 任务未归档（未执行 /archive）
+- 归档文档缺少完成日期元数据
+
+**建议**:
+- 完成任务后使用 `/archive` 命令归档
+- 确保归档文档包含 "Completion Date" 元数据
+
+---
+
+*周报生成于 YYYY-MM-DD HH:MM*
+```
+
+### Missing Metadata
+
+Handle gracefully:
+- Use file modification time as fallback for dates
+- Use "Unknown" for missing task names
+- Skip sections that require missing data
+- Log warnings but continue processing
+
+### First Report
+
+When generating first report:
+- Create directory structure: `reports/`, `reports/weekly/`
+- Initialize `_index.md` with template
+- Display welcome message
+
+## 🎯 Quality Checks
+
+Before saving report:
+1. ✅ Verify all required sections are present
+2. ✅ Check date range is valid
+3. ✅ Ensure at least metadata exists
+4. ✅ Validate ISO week number (1-53)
+5. ✅ Check file doesn't already exist (or confirm overwrite)
+6. ✅ Verify relative links are correct
+
+## 🔗 Integration Points
+
+This rule is loaded during:
+- `/report` command execution
+
+Depends on:
+- `memory-bank/archive/` - Source data
+- `memory-bank/reflection/` - Detailed insights
+- `memory-bank/lessons/` - Lessons tracking
+- `memory-bank/tasks.md` - Ongoing work
+
+Outputs to:
+- `memory-bank/reports/weekly/` - Generated reports
+- `memory-bank/reports/_index.md` - Report index

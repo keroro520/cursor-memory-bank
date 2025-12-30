@@ -25,5 +25,9 @@ alwaysApply: true
 * **Module Index:** `memory-bank/lessons/[module-name]/_module-index.md`
 * **Sub-Topic Lessons:** `memory-bank/lessons/[module-name]/[subtopic].md`
 * **Lessons Templates:** `memory-bank/lessons/_templates/` (reference only)
+* **Reports Index:** `memory-bank/reports/_index.md`
+* **Weekly Reports:** `memory-bank/reports/weekly/YYYY-WNN.md`
+* **Monthly Reports:** `memory-bank/reports/monthly/YYYY-MM.md` (future feature)
+* **Report Templates:** `memory-bank/reports/_templates/` (reference only)
 
 **Verification Mandate:** Before any `create_file` or `edit_file` operation on these core files, verify the path starts with `memory-bank/`. If attempting to create a new core file (e.g., `tasks.md` at the start of a project), ensure it is created at `memory-bank/tasks.md`.

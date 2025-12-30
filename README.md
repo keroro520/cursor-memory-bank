@@ -96,6 +96,7 @@ For a detailed explanation of how Memory Bank implements these principles, see t
 - **Platform-Aware Commands**: Automatically adapts commands to your operating system
 - **Memory Bank Integration**: All commands read from and update shared Memory Bank files
 - **Lessons Knowledge Base**: Automatically extracts and organizes best practices from completed tasks by module
+- **Weekly Reports**: Generate comprehensive weekly reports summarizing completed tasks, lessons learned, and progress tracking
 
 ## Installation Instructions
 
@@ -132,6 +133,7 @@ After extracting it from the ZIP file:
    - `/build` - Code implementation
    - `/reflect` - Task reflection
    - `/archive` - Task archiving
+   - `/report` - Generate weekly reports
 
 2. **Start with `/van`** to initialize your project:
    ```
@@ -284,6 +286,7 @@ See [`.cursor/commands/README.md`](.cursor/commands/README.md) for detailed comm
 - Reads reflection document and task details
 - Creates comprehensive archive document
 - Archives creative phase documents (Level 3-4)
+- Extracts lessons learned and updates knowledge base (Level 2-4)
 - Updates `memory-bank/tasks.md` marking task COMPLETE
 - Updates `memory-bank/progress.md` with archive reference
 - Resets `memory-bank/activeContext.md` for next task
@@ -291,6 +294,38 @@ See [`.cursor/commands/README.md`](.cursor/commands/README.md) for detailed comm
 
 **Next steps:**
 - After archiving complete → `/van` (for next task)
+
+#### `/report` - Weekly Report Generation
+**Purpose:** Generate comprehensive weekly reports summarizing completed tasks and progress.
+
+**Usage:**
+```
+/report                    # Current week
+/report 2024-W05          # Specific week
+/report 2024-01-29        # Week containing this date
+```
+
+**What it does:**
+- Scans archived tasks completed within the date range
+- Extracts task summaries, key achievements, and complexity levels
+- Identifies new lessons created during the period
+- Tracks lesson usage and effectiveness
+- Analyzes ongoing work from `memory-bank/tasks.md`
+- Generates comprehensive report with statistics and insights
+- Creates `memory-bank/reports/weekly/YYYY-WNN.md`
+- Updates `memory-bank/reports/_index.md` with new entry
+
+**Report includes:**
+- Weekly overview with task counts and lesson statistics
+- Completed tasks list with key achievements
+- New lessons organized by module
+- Challenges encountered and solutions
+- Lesson usage statistics
+- Ongoing work status
+- Reflection and improvement points
+
+**Next steps:**
+- Use report for planning, retrospectives, or documentation
 
 ### Example Workflow
 
@@ -331,6 +366,7 @@ graph LR
         Reflect["reflection/<br>Review Documents"]
         Archive["archive/<br>Completed Tasks"]
         Lessons["lessons/<br>Knowledge Base"]
+        Reports["reports/<br>Weekly Reports"]
     end
 
     style Tasks fill:#f9d77e,stroke:#d9b95c,stroke-width:3px,color:black
@@ -341,6 +377,7 @@ graph LR
     style Reflect fill:#b3e6cc,stroke:#66c999,color:black
     style Archive fill:#ffd9b3,stroke:#ffb366,color:black
     style Lessons fill:#ffeb99,stroke:#ffd700,color:black
+    style Reports fill:#c9e4ff,stroke:#99c4e0,color:black
 ```
 
 ### Core Files
@@ -360,6 +397,8 @@ graph LR
 - **`archive/archive-[task_id].md`**: Archive documents for completed tasks
 - **`lessons/_index.md`**: Master index of all lessons organized by module
 - **`lessons/[module-name].md`**: Module-specific lessons extracted from reflections
+- **`reports/_index.md`**: Master index of all weekly reports with statistics
+- **`reports/weekly/YYYY-WNN.md`**: Weekly reports summarizing completed tasks and progress
 
 ### Lessons Knowledge Base
 
@@ -372,6 +411,19 @@ The `/archive` command automatically extracts actionable lessons from reflection
 - **Growing Knowledge Base**: Accumulates project-specific best practices over time
 
 See [LESSONS_DESIGN.md](LESSONS_DESIGN.md) for detailed design documentation.
+
+### Weekly Reports
+
+The `/report` command generates comprehensive weekly reports that summarize your development progress:
+
+- **Automatic Data Collection**: Scans archived tasks, reflections, and lessons for the specified time period
+- **Comprehensive Statistics**: Task counts by complexity level, lesson creation, and usage tracking
+- **Progress Insights**: Highlights achievements, challenges, and lessons learned during the week
+- **Time Range Flexibility**: Generate reports for current week, specific weeks, or custom date ranges
+- **Index Management**: Automatically maintains a master index with cross-week statistics and trends
+- **ISO Week Format**: Uses standard ISO 8601 week numbering (YYYY-WNN) for consistency
+
+See [WEEKLY_REPORT_DESIGN.md](WEEKLY_REPORT_DESIGN.md) for detailed design documentation.
 
 ## Progressive Rule Loading
 
@@ -479,6 +531,7 @@ The Memory Bank system is actively being developed and improved. Key points to u
 - [Lessons Knowledge Base Design](LESSONS_DESIGN.md) - Design documentation for the lessons extraction system
 - [Lessons Usage Guide](LESSONS_USAGE_GUIDE.md) - How to use the lessons knowledge base
 - [Lessons Enhancements v2.0](LESSONS_ENHANCEMENTS_V2.md) - Latest enhancements: recommendations, deduplication, effectiveness tracking, and hierarchical organization
+- [Weekly Report Design](WEEKLY_REPORT_DESIGN.md) - Comprehensive design documentation for the weekly report generation feature
 
 ## Contributing
 
