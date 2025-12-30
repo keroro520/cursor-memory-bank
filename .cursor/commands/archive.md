@@ -12,11 +12,13 @@ Reads from:
 
 Creates:
 - `memory-bank/archive/archive-[task_id].md` - Archive document
+- `memory-bank/lessons/[module-name].md` - Module-specific lessons (if extractable)
 
 Updates:
 - `memory-bank/tasks.md` - Mark task as COMPLETE
 - `memory-bank/progress.md` - Add archive reference
 - `memory-bank/activeContext.md` - Reset for next task
+- `memory-bank/lessons/_index.md` - Update lessons index (if lessons extracted)
 
 ## Progressive Rule Loading
 
@@ -29,6 +31,11 @@ Load: .cursor/rules/isolation_rules/Core/memory-bank-paths.mdc
 ### Step 2: Load ARCHIVE Mode Map
 ```
 Load: .cursor/rules/isolation_rules/visual-maps/archive-mode-map.mdc
+```
+
+### Step 2.5: Load Lessons Extraction Rules
+```
+Load: .cursor/rules/isolation_rules/Core/lessons-extraction.mdc
 ```
 
 ### Step 3: Load Complexity-Specific Archive Rules
@@ -107,7 +114,20 @@ Load: .cursor/rules/isolation_rules/Level4/archive-comprehensive.mdc
    Links to related documents (reflection, creative phases, etc.)
    ```
 
-4. **Update Memory Bank**
+4. **Extract Lessons Learned (Level 2-4)**
+   - Analyze reflection document for extractable lessons
+   - Identify target module(s) based on code paths and keywords
+   - Format lessons following the concise template (see lessons-extraction.mdc)
+   - Update or create `memory-bank/lessons/[module-name].md`
+   - Update `memory-bank/lessons/_index.md`
+
+   **Extraction Criteria:**
+   - ✅ Actionable, reusable, concise, technical/process-related
+   - ❌ Skip task-specific details, obvious knowledge, vague observations
+
+   **Note:** Level 1 tasks typically don't generate extractable lessons
+
+5. **Update Memory Bank**
    - Create `memory-bank/archive/archive-[task_id].md`
    - Mark task as COMPLETE in `memory-bank/tasks.md`
    - Update `memory-bank/progress.md` with archive reference

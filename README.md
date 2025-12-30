@@ -95,6 +95,7 @@ For a detailed explanation of how Memory Bank implements these principles, see t
 - **Level-Specific Workflows**: Adapted processes based on complexity (Levels 1-4)
 - **Platform-Aware Commands**: Automatically adapts commands to your operating system
 - **Memory Bank Integration**: All commands read from and update shared Memory Bank files
+- **Lessons Knowledge Base**: Automatically extracts and organizes best practices from completed tasks by module
 
 ## Installation Instructions
 
@@ -329,8 +330,9 @@ graph LR
         Creative["creative/<br>Design Decisions"]
         Reflect["reflection/<br>Review Documents"]
         Archive["archive/<br>Completed Tasks"]
+        Lessons["lessons/<br>Knowledge Base"]
     end
-    
+
     style Tasks fill:#f9d77e,stroke:#d9b95c,stroke-width:3px,color:black
     style Active fill:#a8d5ff,stroke:#88b5e0,color:black
     style Progress fill:#c5e8b7,stroke:#a5c897,color:black
@@ -338,6 +340,7 @@ graph LR
     style Creative fill:#f4b8c4,stroke:#d498a4,color:black
     style Reflect fill:#b3e6cc,stroke:#66c999,color:black
     style Archive fill:#ffd9b3,stroke:#ffb366,color:black
+    style Lessons fill:#ffeb99,stroke:#ffd700,color:black
 ```
 
 ### Core Files
@@ -355,6 +358,20 @@ graph LR
 - **`creative/creative-[feature_name].md`**: Design decision documents (Level 3-4)
 - **`reflection/reflection-[task_id].md`**: Reflection documents
 - **`archive/archive-[task_id].md`**: Archive documents for completed tasks
+- **`lessons/_index.md`**: Master index of all lessons organized by module
+- **`lessons/[module-name].md`**: Module-specific lessons extracted from reflections
+
+### Lessons Knowledge Base
+
+The `/archive` command automatically extracts actionable lessons from reflection documents and organizes them by code module:
+
+- **Automatic Extraction**: Lessons are identified from reflection documents during archiving
+- **Module Organization**: Lessons are grouped by code module (authentication, database, UI, etc.)
+- **Concise Format**: Each lesson includes context, challenge, best practices, and optional code patterns
+- **Searchable**: Indexed by module and tags for easy discovery
+- **Growing Knowledge Base**: Accumulates project-specific best practices over time
+
+See [LESSONS_DESIGN.md](LESSONS_DESIGN.md) for detailed design documentation.
 
 ## Progressive Rule Loading
 
@@ -459,6 +476,8 @@ The Memory Bank system is actively being developed and improved. Key points to u
 - [Release Notes](RELEASE_NOTES.md) - Information about the latest changes
 - [Memory Bank Upgrade Guide](memory_bank_upgrade_guide.md) - Understanding the new architecture
 - [CREATIVE Mode and Claude's "Think" Tool](creative_mode_think_tool.md) - Design methodology explanation
+- [Lessons Knowledge Base Design](LESSONS_DESIGN.md) - Design documentation for the lessons extraction system
+- [Lessons Usage Guide](LESSONS_USAGE_GUIDE.md) - How to use the lessons knowledge base
 
 ## Contributing
 

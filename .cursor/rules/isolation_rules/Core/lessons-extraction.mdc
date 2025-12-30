@@ -1,0 +1,274 @@
+---
+description: Rules for extracting and organizing lessons learned from completed tasks
+globs: lessons-extraction.mdc
+alwaysApply: false
+---
+
+# LESSONS EXTRACTION AND KNOWLEDGE BASE MANAGEMENT
+
+> **TL;DR:** This guide defines how to extract actionable lessons from reflection documents and organize them into a modular, searchable knowledge base for future reference.
+
+## 🎯 Purpose
+
+Extract valuable insights from completed tasks and organize them by code module to build a growing knowledge base that prevents repeated mistakes and promotes best practices.
+
+## 📁 File Structure
+
+```
+memory-bank/
+└── lessons/
+    ├── _index.md                    # Master index of all lessons by module
+    ├── [module-name].md             # Module-specific lessons
+    └── _templates/
+        └── lesson-template.md       # Template for new lessons
+```
+
+## 📝 Lesson Document Format (CONCISE)
+
+Each module's lesson file follows this structure:
+
+```markdown
+# Module: [Module Name]
+
+**Last Updated**: YYYY-MM-DD
+**Total Lessons**: N
+**Related Paths**: src/path/to/module/
+
+---
+
+## L[number]: [Brief Title (max 8 words)]
+
+**Context**: [1-2 sentence context describing when/where this applies]
+**Challenge**: [1-2 sentences describing the problem encountered]
+**Best Practice**:
+- [Actionable point 1]
+- [Actionable point 2]
+- [Actionable point 3]
+
+**Code Pattern** (optional):
+```[language]
+// Recommended approach (max 10 lines)
+```
+
+**Anti-Pattern** (optional):
+```[language]
+// Avoid this (max 5 lines)
+```
+
+**Related**: [Task-ID], [Module-Name]
+**Tags**: #tag1 #tag2 #tag3
+
+---
+```
+
+## 🔍 Extraction Rules
+
+### When to Extract
+
+Extract lessons during the `/archive` command after reflection is complete:
+1. Read `memory-bank/reflection/reflection-[task_id].md`
+2. Identify extractable lessons from these sections:
+   - **Key Lessons Learned** (Technical, Process, Estimation)
+   - **What Could Have Been Done Differently**
+   - **Actionable Improvements**
+
+### What to Extract
+
+Extract lessons that meet ALL criteria:
+- ✅ **Actionable**: Provides specific guidance for future work
+- ✅ **Reusable**: Applies to future tasks in the same module
+- ✅ **Concise**: Can be expressed in 3-5 bullet points
+- ✅ **Technical or Process**: Relates to code, architecture, or workflow
+
+Do NOT extract:
+- ❌ Task-specific details with no broader application
+- ❌ Obvious/common knowledge
+- ❌ Vague observations without actionable guidance
+- ❌ One-time situational issues
+
+### Module Identification
+
+Identify target module(s) using these strategies:
+
+**Strategy 1: Code Path Analysis**
+```
+src/auth/** → authentication
+src/components/** → component-design
+src/api/** → api-design
+src/database/** → database
+src/utils/** → utilities
+```
+
+**Strategy 2: Keyword Matching**
+```
+Keywords in task/reflection:
+- "authentication", "login", "JWT" → authentication
+- "component", "React", "UI" → component-design
+- "database", "SQL", "migration" → database
+- "API", "endpoint", "REST" → api-design
+```
+
+**Strategy 3: Task Category**
+Based on complexity and type from `tasks.md`:
+- Bug fix → related-module
+- Feature → primary-module-involved
+- Refactoring → refactored-module
+
+## 📋 Extraction Workflow
+
+### Step 1: Analyze Reflection Document
+
+Read `memory-bank/reflection/reflection-[task_id].md` and identify:
+1. Section: **Key Lessons Learned → Technical**
+   - Technical insights about patterns, libraries, architecture
+2. Section: **Key Lessons Learned → Process**
+   - Workflow, estimation, task management insights
+3. Section: **What Could Have Been Done Differently**
+   - Pain points that can inform best practices
+4. Section: **Actionable Improvements**
+   - Specific recommendations for future work
+
+### Step 2: Identify Target Modules
+
+For each identified lesson:
+1. Analyze files changed in the task (from `tasks.md` or `progress.md`)
+2. Map file paths to modules
+3. Use keyword matching as fallback
+4. Default to `general` module if unclear
+
+### Step 3: Format Lessons
+
+Transform reflection content into concise lesson format:
+- **Title**: 8 words max, describes the lesson
+- **Context**: 1-2 sentences, when this applies
+- **Challenge**: 1-2 sentences, what problem was encountered
+- **Best Practice**: 3-5 actionable bullet points
+- **Code Pattern**: Optional, max 10 lines if relevant
+- **Tags**: 2-4 relevant tags
+
+### Step 4: Update Module Files
+
+For each target module:
+1. Check if `memory-bank/lessons/[module-name].md` exists
+2. If not, create from template
+3. Append new lesson with incremented number (L001, L002, etc.)
+4. Update "Last Updated" and "Total Lessons" count
+
+### Step 5: Update Index
+
+Update `memory-bank/lessons/_index.md`:
+1. Add module if new
+2. Update lesson count for module
+3. Add to tag index
+4. Add to "Recently Updated" section (keep last 10)
+
+## 🏷️ Tagging Guidelines
+
+Use consistent tags to enable cross-module searching:
+
+**Technical Tags:**
+- #performance, #security, #scalability, #testing
+- #architecture, #patterns, #refactoring
+- #api, #database, #frontend, #backend
+
+**Process Tags:**
+- #workflow, #debugging, #estimation, #planning
+- #collaboration, #documentation
+
+**Domain Tags:**
+- #authentication, #authorization, #data-modeling
+- #state-management, #error-handling
+
+## 📊 Quality Standards
+
+Each lesson must meet these quality bars:
+
+### Conciseness
+- Context: ≤ 2 sentences
+- Challenge: ≤ 2 sentences
+- Best Practice: 3-5 bullet points
+- Code Pattern: ≤ 10 lines
+
+### Clarity
+- Uses clear, specific language
+- Avoids jargon unless necessary
+- Provides concrete examples
+
+### Actionability
+- Can be applied to future work
+- Provides specific guidance
+- Includes "what to do" not just "what happened"
+
+## 🔄 Index Maintenance
+
+The `_index.md` file structure:
+
+```markdown
+# Lessons Learned Knowledge Base
+
+**Last Updated**: YYYY-MM-DD
+**Total Modules**: N
+**Total Lessons**: M
+
+## 📚 By Module
+
+### [Category Name]
+- [module-name.md](module-name.md) - X lessons
+  *Brief description of module*
+
+## 🏷️ By Tag
+
+### #tag-name
+- [module-name.md#L001] - Lesson title
+- [module-name.md#L003] - Lesson title
+
+## 🕐 Recently Updated
+
+1. [YYYY-MM-DD] module-name.md - Brief update description
+```
+
+## 💡 Example Extraction
+
+**From Reflection Document:**
+```markdown
+## Key Lessons Learned
+
+**Technical:**
+- JWT token expiration handling requires refresh token mechanism
+- Using HttpOnly cookies for token storage prevents XSS attacks
+- Implementing silent refresh improves user experience
+```
+
+**Extracted Lesson:**
+```markdown
+## L001: JWT Token Lifecycle Management
+
+**Context**: When implementing user authentication with JWT tokens
+**Challenge**: Token expiration caused frequent re-logins and poor UX
+**Best Practice**:
+- Implement refresh token mechanism separate from access token
+- Store tokens in HttpOnly cookies to prevent XSS attacks
+- Auto-refresh access token 5 minutes before expiry
+- Implement silent refresh to avoid user interruption
+
+**Code Pattern**:
+```typescript
+const shouldRefresh = (expiresAt: number) => {
+  return Date.now() >= expiresAt - 5 * 60 * 1000;
+};
+```
+
+**Related**: [Task-Auth-2024-01]
+**Tags**: #authentication #jwt #security
+```
+
+## 🎯 Integration Points
+
+This rule is loaded during:
+- `/archive` command (automatic extraction)
+- Optional: Standalone `/lessons` command (future enhancement)
+
+Depends on:
+- `memory-bank/reflection/reflection-[task_id].md` (source)
+- `memory-bank/tasks.md` (module identification)
+- `memory-bank/progress.md` (file paths)
