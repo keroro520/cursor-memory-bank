@@ -1,0 +1,356 @@
+---
+description: Rules for recommending relevant lessons during planning phase
+globs: lessons-recommendation.mdc
+alwaysApply: false
+---
+
+# LESSONS RECOMMENDATION SYSTEM
+
+> **TL;DR:** This guide defines how to proactively recommend relevant lessons from the knowledge base during the planning phase, helping developers apply learned best practices before implementation.
+
+## 🎯 Purpose
+
+Surface relevant lessons from the knowledge base during planning to:
+- Help developers learn from past experiences before starting implementation
+- Prevent repeating known mistakes
+- Apply proven best practices from the start
+- Reduce implementation time and rework
+
+## 📋 When to Recommend Lessons
+
+Recommend lessons during the **PLAN** command for:
+- ✅ Level 2-4 tasks (sufficient complexity)
+- ✅ When `memory-bank/lessons/_index.md` exists
+- ✅ When task involves identifiable modules
+
+Skip recommendation for:
+- ❌ Level 1 tasks (too simple, minimal planning)
+- ❌ When lessons knowledge base doesn't exist yet
+- ❌ When task is too vague to identify modules
+
+## 🔍 Recommendation Workflow
+
+### Step 1: Check Lessons KB Existence
+
+```bash
+# Check if lessons knowledge base exists
+if [ -f "memory-bank/lessons/_index.md" ]; then
+  # Proceed with recommendation
+else
+  # Skip recommendation, continue with normal planning
+fi
+```
+
+### Step 2: Identify Relevant Modules
+
+Analyze the task description from `memory-bank/tasks.md` to identify modules:
+
+**Method 1: Keyword Matching**
+```
+Task contains:
+- "authentication", "login", "JWT", "OAuth" → authentication
+- "database", "SQL", "migration", "query" → database
+- "component", "React", "UI", "design" → component-design
+- "API", "endpoint", "REST", "GraphQL" → api-design
+- "state", "Redux", "context" → state-management
+- "test", "testing", "spec" → testing
+```
+
+**Method 2: File Path Analysis** (if available from task description)
+```
+Files mentioned:
+- src/auth/** → authentication
+- src/components/** → component-design
+- src/api/** → api-design
+- src/database/** → database
+```
+
+**Method 3: Tag Matching** (use for cross-cutting concerns)
+```
+Task requirements mention:
+- "performance" → search tag #performance
+- "security" → search tag #security
+- "optimization" → search tag #performance, #optimization
+```
+
+### Step 3: Search Lessons Index
+
+Read `memory-bank/lessons/_index.md` and:
+
+1. **Search "By Module" section** for identified modules
+2. **Search "By Tag" section** for relevant tags
+3. **Collect matching lesson files** and their lesson counts
+
+### Step 4: Read Relevant Lessons
+
+For each matching module file:
+1. Read `memory-bank/lessons/[module-name].md`
+2. Extract lesson IDs, titles, and tags
+3. Rank by relevance (see ranking criteria below)
+4. Select top N lessons (max 5 per module, max 10 total)
+
+### Step 5: Format Recommendations
+
+Display recommendations in the planning output:
+
+```markdown
+## 📚 Relevant Experience from Knowledge Base
+
+Found **X lessons** from Y module(s) that may help with this task:
+
+### Authentication Module (3 lessons)
+- **L001: JWT Token Lifecycle Management** #jwt #security
+  Context: Token expiration handling with refresh mechanism
+  → See: `memory-bank/lessons/authentication.md#L001`
+
+- **L002: OAuth Integration Error Handling** #oauth #error-handling
+  Context: Comprehensive error handling for OAuth flows
+  → See: `memory-bank/lessons/authentication.md#L002`
+
+### Database Module (2 lessons)
+- **L003: Query Optimization for Large Datasets** #performance
+  Context: Index strategies and query patterns
+  → See: `memory-bank/lessons/database.md#L003`
+
+**💡 Tip**: Review these lessons before implementation to apply proven patterns.
+```
+
+## 🎯 Ranking Criteria
+
+Rank lessons by relevance score (highest first):
+
+### Primary Factors (High Weight)
+- **Module Match** (+10 points): Lesson module matches identified module
+- **Tag Match** (+5 points per tag): Lesson tags match task keywords
+- **Applied Count** (+2 points per application): Lesson has been successfully applied before
+
+### Secondary Factors (Medium Weight)
+- **Recency** (+3 points): Lesson updated in last 30 days
+- **Success Rate** (+2 points): Lesson has high success rate (if tracked)
+
+### Penalties (Negative Weight)
+- **Deprecated** (-100 points): Lesson marked as deprecated
+- **Low Success Rate** (-5 points): Lesson has success rate < 50%
+
+### Example Calculation
+```
+Lesson: authentication.md#L001
+- Module match: authentication (+10)
+- Tags match: #jwt (+5), #security (+5)
+- Applied 3 times (+6)
+- Updated 20 days ago (+3)
+Total Score: 29
+
+Lesson: database.md#L005
+- Tag match: #security (+5)
+- Applied 1 time (+2)
+- Updated 45 days ago (+0)
+Total Score: 7
+
+→ Rank L001 higher than L005
+```
+
+## 📊 Recommendation Limits
+
+To avoid information overload:
+- **Max lessons per module**: 5
+- **Max total lessons**: 10
+- **Max modules shown**: 3
+
+If more lessons available:
+```markdown
+**Note**: Found 8 additional lessons. See `memory-bank/lessons/_index.md` for full list.
+```
+
+## 🔄 Integration with Planning Workflow
+
+### In PLAN Command
+
+```markdown
+1. Read task context
+2. **→ Query and display relevant lessons ← [NEW STEP]**
+3. Create implementation plan
+   - Consider recommended lessons in design decisions
+   - Reference specific lessons in plan where applicable
+4. Technology validation
+5. Identify creative phases
+6. Update Memory Bank
+   - Include "Relevant Lessons" section in tasks.md
+```
+
+### Example: tasks.md Update
+
+```markdown
+## Implementation Plan
+
+### Relevant Lessons Referenced
+- `lessons/authentication.md#L001` - JWT token lifecycle management
+- `lessons/api-design.md#L003` - Error response patterns
+
+### Planned Changes
+1. Implement JWT authentication
+   - Apply refresh token pattern from L001
+   - Use error handling from L003
+...
+```
+
+## 💡 Smart Recommendations
+
+### Context-Aware Suggestions
+
+**For Level 2 Tasks:**
+- Show 2-3 most relevant lessons
+- Focus on code patterns
+- Brief context only
+
+**For Level 3-4 Tasks:**
+- Show up to 5 lessons per module
+- Include architectural considerations
+- Link to related lessons
+
+### Anti-Pattern Warnings
+
+If task description suggests a known anti-pattern:
+```markdown
+⚠️ **Note**: Task description mentions [anti-pattern].
+See `lessons/[module].md#L00X` for recommended approach.
+```
+
+## 🚫 When NOT to Recommend
+
+Skip recommendation if:
+1. No lessons knowledge base exists
+2. Task too vague to identify modules
+3. No matching lessons found (show brief message)
+4. Level 1 task (minimal value)
+
+### Example: No Lessons Found
+```markdown
+## 📚 Relevant Experience
+
+No existing lessons found for this task area. This is an opportunity to create new lessons after completion!
+```
+
+## 📝 Metadata Tracking (for future enhancements)
+
+When lessons are recommended, track (optional):
+- Which lessons were shown during planning
+- Which lessons were actually referenced in implementation
+- Success/failure of implementation using recommended lessons
+
+This data can inform future ranking improvements.
+
+## 🔧 Implementation Notes
+
+### File Reading Strategy
+```
+1. Check if lessons/_index.md exists
+   - If no: skip recommendation
+   - If yes: proceed
+
+2. Parse index for modules and tags
+   - Use simple text search (grep-like)
+   - No complex parsing needed
+
+3. Read only relevant module files
+   - Don't read all lessons upfront
+   - Lazy load based on module match
+
+4. Extract lesson metadata
+   - Title, tags, context (first 100 chars)
+   - No need to read full lesson content
+```
+
+### Performance Considerations
+- Read index file only once
+- Read max 3 module files
+- Limit text processing to metadata extraction
+- Cache nothing (stateless operation)
+
+## 📖 Example Full Workflow
+
+**Task**: "Add OAuth2 authentication with Google and GitHub"
+
+**Step 1**: Identify modules
+- Keywords: "OAuth2", "authentication", "Google", "GitHub"
+- Modules: authentication, api-design
+
+**Step 2**: Search index
+```
+From lessons/_index.md:
+- authentication.md - 5 lessons
+- api-design.md - 8 lessons
+```
+
+**Step 3**: Read and rank
+```
+authentication.md:
+- L001: JWT Token Management (score: 29)
+- L002: OAuth Integration Error Handling (score: 35) ← highest
+- L003: Session Management (score: 15)
+
+api-design.md:
+- L007: API Error Responses (score: 18)
+```
+
+**Step 4**: Display top 3
+```markdown
+## 📚 Relevant Experience from Knowledge Base
+
+Found **3 lessons** from 2 module(s) that may help with this task:
+
+### Authentication Module
+- **L002: OAuth Integration Error Handling** #oauth #error-handling #security
+  Context: Comprehensive error handling for OAuth flows including provider errors, user denial, and CSRF protection
+  → See: `memory-bank/lessons/authentication.md#L002`
+
+- **L001: JWT Token Lifecycle Management** #jwt #security
+  Context: Token expiration handling with refresh mechanism
+  → See: `memory-bank/lessons/authentication.md#L001`
+
+### API Design Module
+- **L007: Consistent Error Response Format** #api #error-handling
+  Context: Standardized error responses across all endpoints
+  → See: `memory-bank/lessons/api-design.md#L007`
+
+**💡 Tip**: OAuth integration is complex. Pay special attention to L002 for error handling patterns.
+```
+
+**Step 5**: Reference in plan
+```markdown
+## Implementation Plan
+
+### Relevant Lessons Referenced
+- L002: OAuth error handling patterns
+- L001: Token refresh mechanism
+- L007: API error response format
+
+### Implementation Steps
+1. Set up OAuth providers (Google, GitHub)
+   - Follow error handling from L002
+   - Implement state validation (CSRF protection per L002)
+
+2. Implement token management
+   - Use refresh token pattern from L001
+   - Store in HttpOnly cookies per L001
+
+3. Create error handling
+   - Use consistent format from L007
+   - Handle all OAuth error cases from L002
+...
+```
+
+## 🎯 Success Metrics
+
+Good recommendations should:
+- ✅ Surface 2-5 highly relevant lessons
+- ✅ Match task requirements closely
+- ✅ Provide actionable guidance
+- ✅ Be referenced in the final plan
+- ✅ Reduce implementation errors
+
+Poor recommendations:
+- ❌ Too many lessons (information overload)
+- ❌ Irrelevant lessons (wrong module/context)
+- ❌ Obvious/basic knowledge
+- ❌ Never referenced in implementation

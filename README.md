@@ -478,6 +478,7 @@ The Memory Bank system is actively being developed and improved. Key points to u
 - [CREATIVE Mode and Claude's "Think" Tool](creative_mode_think_tool.md) - Design methodology explanation
 - [Lessons Knowledge Base Design](LESSONS_DESIGN.md) - Design documentation for the lessons extraction system
 - [Lessons Usage Guide](LESSONS_USAGE_GUIDE.md) - How to use the lessons knowledge base
+- [Lessons Enhancements v2.0](LESSONS_ENHANCEMENTS_V2.md) - Latest enhancements: recommendations, deduplication, effectiveness tracking, and hierarchical organization
 
 ## Contributing
 

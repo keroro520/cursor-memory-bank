@@ -29,6 +29,13 @@
 // Example of what NOT to do
 ```
 
+**Effectiveness** (tracked automatically):
+- Created: YYYY-MM-DD
+- Applied: 0 times
+- Last Applied: Never
+- Success Rate: N/A (not enough data)
+- Status: Active
+
 **Related**: [Task-ID], [Module-Name]
 **Tags**: #tag1 #tag2 #tag3
 

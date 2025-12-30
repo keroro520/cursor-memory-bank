@@ -266,10 +266,176 @@ graph TD
 4. **最佳实践传播**：团队成员共享最佳实践
 5. **精简高效**：聚焦核心要点，避免冗余
 
-## 八、未来扩展
+## 八、已实现的高级功能
 
-1. **AI 辅助搜索**：使用语义搜索找到相关经验
-2. **经验评分**：根据使用频率和价值评分
-3. **跨项目共享**：将通用经验提取为跨项目知识库
-4. **可视化**：生成经验地图，展示模块间关系
-5. **自动提醒**：开发新功能时自动提醒相关经验
+### 8.1 主动经验推荐（改进1）✅
+
+在 `/plan` 命令执行时自动推荐相关经验：
+
+**工作流程**：
+```
+/plan 执行 →
+1. 分析任务描述，识别相关模块
+2. 搜索 lessons/_index.md 匹配模块和标签
+3. 读取相关经验文件
+4. 按相关度排序（模块匹配、标签匹配、应用次数）
+5. 显示前 5-10 条最相关经验
+6. 在规划中引用相关经验
+```
+
+**示例输出**：
+```markdown
+## 📚 Relevant Experience from Knowledge Base
+
+Found **3 lessons** from 2 module(s) that may help with this task:
+
+### Authentication Module
+- **L002: OAuth Integration Error Handling** #oauth #error-handling
+  → See: `memory-bank/lessons/authentication.md#L002`
+
+💡 Tip: OAuth integration is complex. Pay special attention to L002.
+```
+
+**价值**：
+- ✅ 让经验从"被动查询"变为"主动推荐"
+- ✅ 确保开发者在规划时就看到相关最佳实践
+- ✅ 提高经验库的实际使用率
+
+**实现文件**：
+- `.cursor/commands/plan.md` - 添加经验查询步骤
+- `.cursor/rules/isolation_rules/Core/lessons-recommendation.mdc` - 推荐规则
+
+### 8.2 经验去重和合并机制（改进2）✅
+
+在提取新经验前自动检测相似经验并合并：
+
+**相似度检测**：
+- 标签重叠度（≥50%）
+- 关键词重叠度（≥70%）
+- 主题相似性
+
+**合并策略**：
+- **高相似度（≥80%）**：合并到现有经验
+  - 增强描述和最佳实践
+  - 添加新代码示例
+  - 更新 Related 字段
+  - 添加合并注释
+
+- **中等相似度（50-79%）**：创建新经验并交叉引用
+  - 添加 "Related Lessons: See also L00X"
+
+- **低相似度（<50%）**：正常创建新经验
+
+**示例**：
+```markdown
+## L001: JWT Token Lifecycle Management
+
+**Context**: When implementing user authentication with JWT tokens for session management
+**Challenge**: Token expiration and security vulnerabilities cause poor UX and security risks
+**Best Practice**:
+- Implement refresh token mechanism (separate from access token)
+- Auto-refresh access token 5 minutes before expiry
+- Use HttpOnly cookies to prevent XSS attacks
+- Rotate refresh tokens on each use for added security ← [Merged from Task-2024-03]
+- Implement token blacklist for proper logout handling ← [Merged from Task-2024-03]
+
+**Related**: [Task-Auth-2024-01], [Task-Auth-2024-03]
+
+*Enhanced: 2024-01-20 - Added security best practices from Task-Auth-2024-03*
+```
+
+**价值**：
+- ✅ 保持经验库精简
+- ✅ 避免信息过载和冗余
+- ✅ 经验质量随验证次数提升
+
+**实现文件**：
+- `.cursor/rules/isolation_rules/Core/lessons-extraction.mdc` - Step 3.5 去重检查
+
+### 8.3 经验有效性追踪（改进3）✅
+
+为每条经验添加元数据，追踪应用情况和成功率：
+
+**追踪指标**：
+```markdown
+**Effectiveness** (tracked automatically):
+- Created: 2024-01-10
+- Applied: 12 times
+- Last Applied: 2024-01-18
+- Success Rate: 100% (12/12 successful)
+- Status: Active
+```
+
+**Status 状态值**：
+- **Active**: 经验有效且当前（默认）
+- **Deprecated**: 经验已过时
+- **Under Review**: 成功率低（<50%且≥3次应用）
+
+**更新时机**：
+在 `/reflect` 命令中评估经验应用效果：
+- 成功：任务顺利完成，经验有帮助
+- 部分：任务完成但经验可改进
+- 失败：经验未能防止问题
+
+**废弃标准**：
+- 技术/方法已过时
+- 有更好的经验取代
+- 成功率 < 50%（≥5次应用）
+
+**价值**：
+- ✅ 识别最有价值的经验
+- ✅ 及时发现和更新过时经验
+- ✅ 数据驱动的知识库维护
+
+**实现文件**：
+- `lessons-extraction.mdc` - 元数据格式定义
+- `.cursor/commands/reflect.md` - Step 4 追踪经验效果
+- `memory-bank-templates/lessons/_templates/lesson-template.md` - 模板更新
+
+### 8.4 层次化经验组织（改进4）✅
+
+支持大型模块的层次化组织，按子主题分组：
+
+**适用场景**：
+- 模块经验 > 10 条
+- 经验可分为多个子主题
+- 需要细粒度组织
+
+**目录结构**：
+```
+lessons/
+├── _index.md
+├── authentication/                    # 模块目录
+│   ├── _module-index.md              # 模块概览
+│   ├── jwt-basics.md                 # 子主题（5 lessons）
+│   ├── oauth-integration.md          # 子主题（8 lessons）
+│   └── session-management.md         # 子主题（4 lessons）
+└── component-design.md               # 扁平结构（8 lessons）
+```
+
+**模块索引功能**：
+- 所有子主题概览
+- 快速参考（最常用、最近更新）
+- 跨模块引用
+- 统计数据
+
+**优势**：
+- ✅ 更好地组织大型模块
+- ✅ 渐进式查找（概览→细节）
+- ✅ 便于维护
+- ✅ 向后兼容（可混用扁平和层次结构）
+
+**实现文件**：
+- `memory-bank-templates/lessons/HIERARCHICAL_STRUCTURE.md` - 设计文档
+- `memory-bank-templates/lessons/_templates/module-index-template.md` - 模块索引模板
+- `memory-bank-templates/lessons/database-example/` - 完整示例
+- `.cursor/rules/isolation_rules/Core/memory-bank-paths.mdc` - 路径定义
+
+## 九、未来扩展
+
+1. **AI 辅助语义搜索**：使用自然语言查询经验（需 AI 集成）
+2. **经验知识图谱**：可视化经验间关系和依赖
+3. **自动验证**：为经验添加可执行测试
+4. **经验模板库**：架构决策、检查清单、决策矩阵等
+5. **跨项目共享**：导出/导入通用经验
+6. **社区知识库**：团队级别的经验共享

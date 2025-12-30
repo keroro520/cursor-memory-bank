@@ -5,15 +5,17 @@ This command facilitates structured reflection on completed implementation, docu
 ## Memory Bank Integration
 
 Reads from:
-- `memory-bank/tasks.md` - Completed implementation details
+- `memory-bank/tasks.md` - Completed implementation details (including referenced lessons)
 - `memory-bank/progress.md` - Implementation status and observations
 - `memory-bank/creative/creative-*.md` - Design decisions (Level 3-4)
+- `memory-bank/lessons/[module-name].md` - Referenced lessons (if any)
 
 Creates:
 - `memory-bank/reflection/reflection-[task_id].md` - Reflection document
 
 Updates:
 - `memory-bank/tasks.md` - Reflection status
+- `memory-bank/lessons/[module-name].md` - Update lesson effectiveness metrics (if lessons were referenced)
 
 ## Progressive Rule Loading
 
@@ -83,12 +85,33 @@ Load: .cursor/rules/isolation_rules/Level4/reflection-comprehensive.mdc
    - Document process improvements
    - Document technical improvements
 
-4. **Create Reflection Document**
+4. **Track Lesson Effectiveness** (if lessons were referenced)
+   - Check if `memory-bank/tasks.md` contains "Relevant Lessons Referenced" section
+   - For each referenced lesson:
+     - Read the lesson file
+     - Increment "Applied" count
+     - Update "Last Applied" date
+     - Assess effectiveness based on task outcome:
+       * Success: Task completed smoothly, lesson helped
+       * Partial: Task completed but lesson could be improved
+       * Failure: Lesson didn't prevent issues
+     - Update Success Rate if Applied ≥ 3
+     - Update lesson Status if needed
+
+5. **Create Reflection Document**
    - Create `memory-bank/reflection/reflection-[task_id].md`
    - Structure: Summary, What Went Well, Challenges, Lessons Learned, Process Improvements, Technical Improvements, Next Steps
+   - Include section on lesson effectiveness if lessons were used:
+     ```markdown
+     ## Lessons Applied
 
-5. **Update Memory Bank**
+     Referenced lessons and their effectiveness:
+     - L001 (authentication.md): [Helpful/Partially Helpful/Not Helpful] - [Brief note]
+     ```
+
+6. **Update Memory Bank**
    - Update `memory-bank/tasks.md` with reflection status
+   - Update lesson effectiveness metrics (if applicable)
    - Mark reflection phase as complete
 
 ## Usage

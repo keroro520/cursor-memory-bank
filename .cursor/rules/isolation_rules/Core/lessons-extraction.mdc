@@ -55,11 +55,53 @@ Each module's lesson file follows this structure:
 // Avoid this (max 5 lines)
 ```
 
+**Effectiveness** (tracked automatically):
+- Created: YYYY-MM-DD (when lesson was first extracted)
+- Applied: N times (count of tasks that referenced this lesson)
+- Last Applied: YYYY-MM-DD or Never
+- Success Rate: X% (percentage of successful applications, N/A if < 3 applications)
+- Status: Active | Deprecated | Under Review
+
 **Related**: [Task-ID], [Module-Name]
 **Tags**: #tag1 #tag2 #tag3
 
 ---
 ```
+
+### Effectiveness Tracking
+
+**Initial Values** (when creating new lesson):
+```markdown
+**Effectiveness**:
+- Created: [Current Date]
+- Applied: 0 times
+- Last Applied: Never
+- Success Rate: N/A (not enough data)
+- Status: Active
+```
+
+**Updating Effectiveness** (during `/reflect` phase):
+
+When a task references a lesson (mentioned in plan or reflection):
+1. Increment "Applied" count
+2. Update "Last Applied" date
+3. Determine success based on task outcome:
+   - Success: Task completed without major issues related to this lesson's area
+   - Partial: Task completed but lesson could have been better
+   - Failure: Lesson didn't prevent issues or was incorrect
+4. Calculate Success Rate when Applied ≥ 3:
+   - Success Rate = (Successful Applications / Total Applications) × 100%
+
+**Status Values**:
+- **Active**: Lesson is current and useful (default)
+- **Deprecated**: Lesson is outdated (mark when better practice emerges)
+- **Under Review**: Lesson has low success rate (<50% with ≥3 applications)
+
+**Deprecation Criteria**:
+- Technology/approach is obsolete
+- Better lesson supersedes this one
+- Success rate < 50% with ≥ 5 applications
+- Manually marked as deprecated
 
 ## 🔍 Extraction Rules
 
@@ -145,6 +187,50 @@ Transform reflection content into concise lesson format:
 - **Best Practice**: 3-5 actionable bullet points
 - **Code Pattern**: Optional, max 10 lines if relevant
 - **Tags**: 2-4 relevant tags
+
+### Step 3.5: Check for Duplicates and Similar Lessons
+
+**BEFORE adding a new lesson**, check if similar lessons already exist:
+
+1. **Read existing module file** (if exists)
+2. **Compare with existing lessons** using similarity criteria:
+   - Similar title/topic (≥70% keyword overlap)
+   - Overlapping tags (≥50% tag overlap)
+   - Similar context or challenge description
+
+3. **Determine action**:
+
+   **High Similarity (≥80%)**: MERGE instead of creating new lesson
+   - Enhance existing lesson's description
+   - Add new insights to Best Practice section
+   - Add new code pattern if different/better
+   - Update Related field with both task IDs
+   - Add merge note: `*Enhanced: [Date] - Added insights from [Task-ID]*`
+
+   **Medium Similarity (50-79%)**: CREATE new lesson with cross-reference
+   - Create new lesson as planned
+   - Add cross-reference: `**Related Lessons**: See also L00X`
+   - Consider future consolidation
+
+   **Low Similarity (<50%)**: CREATE new lesson normally
+   - No duplicate concern, proceed with creation
+
+4. **Similarity Calculation Example**:
+```
+New Lesson: "JWT Token Refresh Strategy"
+Tags: #jwt #authentication #security
+Key concepts: token, refresh, expiry, HttpOnly
+
+Existing L001: "JWT Token Lifecycle Management"
+Tags: #jwt #authentication #security
+Key concepts: token, refresh, expiry, session
+
+Similarity Score:
+- Tag overlap: 3/3 = 100%
+- Keyword overlap: 3/4 = 75%
+- Topic similarity: Very High
+→ Average: ~85% → HIGH SIMILARITY → MERGE
+```
 
 ### Step 4: Update Module Files
 
@@ -262,13 +348,92 @@ const shouldRefresh = (expiresAt: number) => {
 **Tags**: #authentication #jwt #security
 ```
 
+## 🔀 Example: Merging Similar Lessons
+
+**Scenario**: New lesson very similar to existing L001
+
+**Existing L001** (before merge):
+```markdown
+## L001: JWT Token Lifecycle Management
+
+**Context**: When implementing user authentication with JWT tokens
+**Challenge**: Token expiration caused frequent re-logins
+**Best Practice**:
+- Implement refresh token mechanism
+- Auto-refresh 5 minutes before expiry
+- Use HttpOnly cookies
+
+**Related**: [Task-Auth-2024-01]
+**Tags**: #jwt #authentication
+```
+
+**New Lesson** (from Task-Auth-2024-03):
+```markdown
+Similar topic: "JWT Token Security Best Practices"
+New insights:
+- Rotate refresh tokens on each use
+- Implement token blacklist for logout
+- Add CSRF protection for cookie-based auth
+```
+
+**Similarity Check**:
+- Tag overlap: 100% (#jwt, #authentication)
+- Topic overlap: 85% (both about JWT token management)
+- → **HIGH SIMILARITY (85%) → MERGE**
+
+**Merged L001** (after enhancement):
+```markdown
+## L001: JWT Token Lifecycle Management
+
+**Context**: When implementing user authentication with JWT tokens for session management
+**Challenge**: Token expiration and security vulnerabilities cause poor UX and security risks
+**Best Practice**:
+- Implement refresh token mechanism (separate from access token)
+- Auto-refresh access token 5 minutes before expiry
+- Use HttpOnly cookies to prevent XSS attacks
+- Rotate refresh tokens on each use for added security
+- Implement token blacklist for proper logout handling
+- Add CSRF protection when using cookie-based authentication
+
+**Code Pattern**:
+```typescript
+const shouldRefresh = (expiresAt: number) => {
+  return Date.now() >= expiresAt - 5 * 60 * 1000;
+};
+```
+
+**Related**: [Task-Auth-2024-01], [Task-Auth-2024-03]
+**Tags**: #jwt #authentication #security
+
+*Enhanced: 2024-01-20 - Added security best practices from Task-Auth-2024-03*
+```
+
+**Benefits of Merging**:
+- ✅ Single comprehensive lesson instead of fragmented knowledge
+- ✅ All JWT token insights in one place
+- ✅ Easier to find and reference
+- ✅ Shows evolution of understanding over time
+
+## 📊 Deduplication Statistics
+
+Track duplicate detection (optional metadata):
+```markdown
+<!-- At end of module file -->
+## Merge History
+
+- 2024-01-20: Merged insights from Task-Auth-2024-03 into L001
+- 2024-02-15: Merged insights from Task-Auth-2024-07 into L001
+- 2024-03-10: Created L005 with cross-reference to L001 (medium similarity)
+```
+
 ## 🎯 Integration Points
 
 This rule is loaded during:
-- `/archive` command (automatic extraction)
+- `/archive` command (automatic extraction with deduplication)
 - Optional: Standalone `/lessons` command (future enhancement)
 
 Depends on:
 - `memory-bank/reflection/reflection-[task_id].md` (source)
 - `memory-bank/tasks.md` (module identification)
 - `memory-bank/progress.md` (file paths)
+- `memory-bank/lessons/[module-name].md` (existing lessons for comparison)
